@@ -1,0 +1,161 @@
+#!/usr/bin/perl -w
+
+####################################################
+#
+# sync_playlists - synchronize playlists to Mass Storage Device type
+#                  players
+# Copyright (C) 2010 Matthew Caron <matt@mattcaron.net>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License, version 2, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# Full license at: http://www.fsf.org/licensing/licenses/info/GPLv2.html
+#
+####################################################
+
+use strict;
+use File::Spec;
+use File::Path;
+use File::Copy;
+use Getopt::Long;
+use Data::Dumper;
+
+## IMPORTANT - if your user name just happens to be "matt", make sure
+## to comment out the section NOT FOR NORMAL PEOPLE, below
+
+## Constants
+# Prefix which should be knocked off things copied.
+my $source_dir = $ENV{"HOME"} . "/Music";
+
+# target device base directory
+my $device_dir = "/media/IPOD3G";
+
+# target subdir to which music is to be copied
+my $target_subdir = "Music";
+
+## End Constants
+
+# target dir to which music is to be copied
+my $target_dir = "${device_dir}/${target_subdir}";
+
+# playlist directory
+my $playlist_dir = "${device_dir}/Playlists";
+
+sub sync($$)
+{
+    my ($force, $verbose) = @_;
+
+    foreach my $playlist (@ARGV){
+        print("Transferring files listed in ${playlist}\n");
+
+        my ($volume, $dir, $playlist_filename) =
+            File::Spec->splitpath($playlist);
+        my $playlist_destination = $playlist_dir . "/" . $playlist_filename;
+
+        if (!-d $playlist_dir) {
+            if ($verbose) {
+                print("\n\nMaking directory ${playlist_dir}...\n\n");
+            }
+
+            mkpath($playlist_dir) ||
+                die("Cannot mkpath ${playlist_dir}: $!");
+        }
+
+        open(PLAYLIST_IN, "<", $playlist) ||
+            die("Unable to open ${playlist}: $!");
+        if(!open(PLAYLIST_OUT, ">", $playlist_destination)){
+            close(PLAYLIST_IN);
+            die("Unable to open ${playlist_destination}: $!");
+        }
+
+        while (my $line = <PLAYLIST_IN>) {
+            if ($line =~ /^#/) {
+                # don't full process comments, just write them out to the file
+                print(PLAYLIST_OUT $line);
+            }
+            else {
+                my $source_file = $line;
+
+                # replace the line with appropriate relative pathname
+                $line =~ s/$source_dir/\.\.\/$target_subdir/;
+                print(PLAYLIST_OUT $line);
+
+                chomp($source_file);
+                my $destination_file = $source_file;
+                $destination_file =~ s/^$source_dir/$target_dir/;
+                my ($volume, $destination_dir, $file) =
+                    File::Spec->splitpath($destination_file);
+                if (!-d $destination_dir) {
+                    if ($verbose) {
+                        print("\n\nMaking directory ${destination_dir}...\n\n");
+                    }
+
+                    mkpath($destination_dir) ||
+                        die("Cannot mkpath ${destination_dir}: $!");
+                }
+
+                # quick check - only copy the file if it doesn't exist
+                # (easy, cheap optimization step)
+                if (-e $destination_file && !$force) {
+                    if ($verbose) {
+                        print("Skipping copy of ${source_file}: \n" .
+                              "         ${destination_file} already exists\n");
+                    }
+                }
+                else {
+                    if ($verbose) {
+                        print("${source_file} => ${destination_file}\n");
+                    }
+
+                    # copy file to that directory
+                    copy($source_file, $destination_file) ||
+                        print("WARNING: Could copy ${source_file} to " .
+                            "${destination_file}: $!\n");
+                }
+            }
+        }
+
+        close(PLAYLIST_IN);
+        close(PLAYLIST_OUT);
+    }
+}
+
+##
+#
+sub main()
+{
+    my ($help, $force, $verbose) = 0;
+
+    my $options = GetOptions(
+        "help|?"        => \$help,
+        "force"         => \$force,
+        "verbose"       => \$verbose
+        );
+
+    my ($volume, $dir, $command) = File::Spec->splitpath($0);
+
+    my $usage   = qq^
+${command} [options] playlist1 [playlist2..]
+Options are:
+  --help, --?  displays this help
+  --force      force copy, even if target exists
+                     (only used for sync, ignored otherwise)
+  --verbose    be more verbose
+^;
+
+    if($help)
+    {
+        print($usage);
+        exit(0);
+    }
+
+    sync($force, $verbose);
+}
+
+&main();
