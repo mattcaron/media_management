@@ -1,0 +1,228 @@
+#!/usr/bin/perl -w
+
+####################################################
+#
+# sync_podcast - synchronize podcasts to USB Mass Storage Device type
+#                players
+# Copyright (C) 2010 Matthew Caron <matt@mattcaron.net>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License, version 2, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# Full license at: http://www.fsf.org/licensing/licenses/info/GPLv2.html
+#
+####################################################
+
+use strict;
+use File::Find;
+use File::Path;
+use File::Copy;
+use Getopt::Long;
+use Data::Dumper;
+
+## IMPORTANT - if your user name just happens to be "matt", make sure
+## to comment out the section NOT FOR NORMAL PEOPLE, below
+
+## Constants
+# Directory from which podcasts are to be copied
+my $source_dir = $ENV{"HOME"} . "/pub/podcasts";
+
+# Log file containing list of copied podcasts
+my $podcast_log_file = "sync_podcasts.log";
+
+# target directory to which podcasts are to be copied
+my $target_dir = "/media/IPOD/podcasts";
+
+# portion of above representing the device's location on your machine.
+# this is removed from playlists so that the relative path is correct
+my $playlist_base_remove = "/media/IPOD";
+
+# name of the automagically generated playlist file
+my $auto_playlist_file = "00_playlist.m3u";
+
+# file which causes us to skip a directory
+my $nopushfile = ".nopush";
+
+## End Constants
+
+## Derived constants
+my $podcast_log = $source_dir . "/" . $podcast_log_file;
+
+## Plain old variables
+my $initialize = 0;
+my %uploaded_files;
+
+my $build_playlist_only = 0;
+my $help = 0;
+
+my $options =   GetOptions
+    (
+     'build-playlist-only'    => \$build_playlist_only,
+     'help|?'        => \$help
+     );
+
+my $usage   = qq^
+  --help, --?             displays this help
+  --build-playlist-only   don't copy files, just display help.
+^;
+
+# ' Stupid emacs single quote font coloring
+
+if($help)
+{
+    print $usage;
+    exit(0);
+}
+
+if(!$build_playlist_only)
+{
+
+    # Read in logfile and store file path and name in hash.
+    if(-e $podcast_log)
+    {
+        open(LOGFILE, $podcast_log);
+
+        while(<LOGFILE>)
+        {
+            chomp($_);
+            $uploaded_files{$_} = 1;
+        }
+
+        close(LOGFILE);
+    }
+    else
+    {
+        # logfile doesn't exist - assume initialization mode
+        $initialize = 1;
+
+        print "Initializing logfile...\n";
+    }
+
+    # Recurse through directory and find each file there and do copy
+    find(\&copy_stuff,  ($source_dir));
+} # end !$build_playlist_only
+
+# Recurse through and build playlists for each directory
+find(\&build_playlists,  ($target_dir));
+
+my @skipped; # Bad global, no cookie.
+
+sub copy_stuff($@)
+{
+    # file name
+    my ($filename) = $_;
+
+    # source directory
+    my $dirname = $File::Find::dir;
+    # source dir + file name
+    my $fullpath = $File::Find::name;
+
+    my $nopushpath = $dirname . "/" . $nopushfile;
+    # print "nopushpath = $nopushpath\n";
+
+    # make sure there's not a .nopush file
+    if(-e $nopushpath)
+    {
+        if(!grep(/^$dirname$/,@skipped))
+        {
+            print "skipping ${dirname} because of ${nopushfile}\n";
+            push(@skipped,$dirname);
+        }
+    }
+    else
+    {
+        # If what we got isn't a directory and it's not the log file,
+        # do something
+        # MC: changed log file to regexp so that stuff like
+        # sync_podcasts.log.old gets ignored as well
+        if(!-d $fullpath && $filename !~ /$podcast_log_file/)
+        {
+            # get name of dir in isolation
+            my $source_dirname = $dirname;
+            $source_dirname =~ s/$source_dir//;
+
+            # target dir
+            my $destination_path = $target_dir . "/" . $source_dirname;
+            # target dir + file name
+            my $destination_path_file = $destination_path . "/" . $filename;
+
+            # make sure this hasn't been uploaded...
+            if(!defined $uploaded_files{$fullpath})
+            {
+                if(!$initialize)
+                {
+
+                    # Put file on the music device, maintaining directory
+                    # structure..
+                    # make directory if it doesn't exist
+                    if(!-d $destination_path)
+                    {
+                        print "\n\nMaking directory ${destination_path}...\n\n";
+
+                        mkpath($destination_path) ||
+                            die "Cannot mkpath ${destination_path}: $!";
+                    }
+
+                    print "$fullpath => ${destination_path_file}\n";
+
+                    # copy file to that directory
+                    copy($fullpath, $destination_path_file) ||
+                       die "Cannot copy ${fullpath} to " .
+                       "${destination_path_file}: $!";
+
+                }
+
+                # Log that you did it
+                open(LOGFILE, ">>", $podcast_log);
+
+                print(LOGFILE "${fullpath}\n");
+
+                close(LOGFILE);
+
+            }
+        } # else, ignore directory
+    } # else we're told to skip the directory
+}
+
+sub build_playlists
+{
+    my $fullpath = $File::Find::name;
+
+    # only operate on directories and they must be below the main one
+    if(-d $fullpath && $fullpath ne $target_dir)
+    {
+        print "Building playlist for ${fullpath}\n";
+
+        my $target_playlist_file = $fullpath . "/" . $auto_playlist_file;
+
+        # shell out call to create playlist
+        # cd (dir) - \ls "`pwd`"/* > 00_playlist.m3u
+        open (LS, "/bin/ls \"$fullpath\"/*|") ||
+            die "Can't get directory listing for ${fullpath}: $!\n";
+        open (PLAYLIST, ">", "${fullpath}/${auto_playlist_file}") ||
+            die "Can't open ${fullpath}/${auto_playlist_file}: $!\n";
+
+        while(<LS>)
+        {
+            my $path = $_;
+
+            # make sure it's not us
+            if($path !~ /$auto_playlist_file/)
+            {
+                chomp($path);
+                $path =~ s/^$playlist_base_remove//;
+                print PLAYLIST $path . "\n";
+            }
+        }
+        close LS;
+        close PLAYLIST;
+    }
+}
+
+
