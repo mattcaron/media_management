@@ -1,0 +1,58 @@
+#!/usr/bin/perl -w
+
+use strict;
+use diagnostics;
+
+use File::Find;
+
+&main();
+
+sub main
+  {
+    find(\&fixname,'.');
+  }
+
+sub fixname
+  {
+    my ($filename) = $_;
+    my $newfilename = $filename;
+    if (($filename eq ".") || ($filename eq "..")){
+      return 0; #because it was catching . and .. and trying to do shit with 
+                # them
+    }
+    $newfilename =~ s/\'//g; #replace ' with nothing
+    $newfilename =~ s/[^\w\.\-]/_/g; #replace non-word or . or - with _
+    $newfilename =~ s/\_+\-/\-/g; #replace _- with -
+    $newfilename =~ s/\-\_+/\-/g; #replace -_ with -
+    $newfilename =~ s/\_+/\_/g; #replace __ with _
+    $newfilename =~ s/^\_+//;   #remove leading __'s
+    $newfilename =~ s/\_+$//;   #remove trailing __'s
+    $newfilename =~ s/\.+/\./g; #replace .. with .
+    $newfilename =~ s/\_+\./\./g; #replace _. with .
+    $newfilename =~ s/\.\_+/\./g; #replace ._ with .
+
+#    print "Old filename is:\n $filename\n";
+#    print "New filename is:\n $newfilename\n";
+
+    if (($filename ne $newfilename) && (-e $newfilename)){
+      print "$newfilename exists. $filename left alone.\n";
+      # if the oldname and the new name are different, but the file 
+      # exists, then print an error.
+    }elsif ($filename ne $newfilename){
+      rename ($filename, $newfilename);
+      #otherwise, if the are different, rename old->new
+    }
+    #otherwise, the names are the same, so you don't do anything.
+}
+
+
+
+
+
+
+
+
+
+
+
+
