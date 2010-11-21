@@ -1,0 +1,96 @@
+batchname:
+
+Renames files of the form trackxx.cdda.mp3 where xx is a number. This
+is the format of output files from cdparanoia once encoded to mp3
+using the mlame script for lame. The script takes a filename argument
+which it parses to get the names to name the mp3's. The file is a
+newline-delimited text file with any text common to all songs
+(typically artist name or album name or both) on the first line. Each
+subsequent line has text specific for that file. Generally, you want
+the artist on the first line and then song titles in order on all
+subsequent lines. The files will retain their track numbers. It will
+also remove any special character cases that are annoying (generally
+anything needing to be escaped on GNU/Linux shells).  Note: this is
+deprecated because of bad MP3 licensing terms. See the cd2ogg script.
+
+
+cd2ogg:
+
+Rips and encodes a cd to a set of ogg files using cdparanoia and
+oggenc based on a text file. Run the script with no arguments to get
+help. Now that I'm using grip, so I don't use this anymore.
+
+
+fixnames:
+
+Did you ever download lots of files from Windows people that have all
+kinds of nasty "need to be escaped" characters in it? Well, then this
+is the script for you. It recursively looks at all the filenames in a
+directory and renames them to the same thing minus the evil
+characters. If the new filename exists, it will print an error and not
+rename the file.
+
+
+sync_podcasts:
+
+This script synchronizes a directory of files (ideally podcasts) with
+another directory (ideally located on a removable media player). It
+builds a log of files which have been successfully synchronized and
+only copies them once. This way, only new downloads are pushed to the
+device. At the end of the process, a playlist is created in each
+directory on the target device. Note: I use this on an iPod Nano
+running the excellent Rockbox firmware.
+
+
+cdtomp3:
+
+Rips a CD using cdparanoia and then encodes it to MP3 using the mlame
+script for lame.
+
+
+dvdblank:
+
+Blank a DVD
+
+
+dvdformat:
+
+Format a DVD
+
+
+fastblank:
+
+Blank a CDRW (fast method)
+
+
+fullblank:
+
+Blank a CDRW (slow, complete method)
+
+
+ripcd.dd:
+
+Rips a filesystem off a CD using the dd command.  It takes 1 argument
+that is the name of the target file. Note that this is deprecated in
+favor of ripcd.readcd, as readcd retries on skips.
+
+
+ripcd.readcd:
+
+Rips an iso9660 filesystem off a CD using the readcd command (which is
+part of cdrecord).  It takes 1 argument that is the name of the target
+file.
+
+
+writecd:
+
+Writes a CD. This script is actually documented, and if you call it
+with no arguments, it prints a condensed version of the recorder's man
+page, with the options that I use the most. Also in that file are how
+to create straight data cd's, audio cd's of properly or improperly
+sized data, and mixed mode (data and audio) cd's.
+
+
+writedvd:
+
+Writes a DVD. Usage is similar to writecd.
