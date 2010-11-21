@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# the the number of args > 0 and isn't then pass them to the command
+# else print the idiot message
+
+if [ $# -gt 0 ]; then
+
+    mkdir $1
+    dvdbackup -v -M -i /dev/dvd -o $1
+    #eject /dev/scd0
+
+else
+	echo "Usage: ripdvd directory"
+fi
+

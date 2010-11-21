@@ -1,0 +1,186 @@
+#!/usr/bin/perl -w
+
+use strict;
+use diagnostics;
+
+my $CDRIP=("cdparanoia -w -B -d /dev/scd"); # device number will be added later
+#CD Ripping command
+my $OGGBASE=("oggenc -q 5");
+#OGG base arguments
+
+if ($#ARGV < 0){
+    &printusage;
+}
+# Check and make sure there are args before doing
+# anything with them
+
+my @args=@ARGV;
+my $argcnt=$#ARGV;
+&main;
+
+sub main{
+    my $arg=$args[0];
+    my $linecount=1;
+    my $filecount=1;
+    my $line;
+    my $artist;
+    my $artist_raw;
+    my $title;
+    my $title_raw;
+    my $genre;
+    my $album;
+    my $number;
+    my $filename;
+    my $origname;
+    my ($help,$qmark)=($arg,$arg);
+    my $oggcmd;
+    my $norip=0;
+    my $multiartists=0;
+    my $counter=0;
+    my $cdnum=0;
+    
+
+    if(($help=~/help/)||($qmark=~/\?/)){
+	&printusage;
+    }else{
+	while ($counter<$argcnt){
+	    $arg=$args[$counter];
+	    
+	    if($arg=~/--norip/){
+		$norip=1;
+	    } elsif ($arg=~/--multi/){
+		$multiartists=1;
+	    }elsif ($arg=~/-2/){
+		$cdnum=1;
+	    }else {
+		print ("\nError: Invalid argument: $arg\n\n");
+		exit(0);
+	    }
+	    ++$counter;
+	}
+	$arg="$args[$counter]";
+
+	open (NAMES, "$arg") || die "Can't open file $arg.\n";
+
+	if($norip==0){
+	    $CDRIP=$CDRIP.$cdnum;
+	    system($CDRIP);
+	}
+
+	while ($line=<NAMES>){
+	    if ($linecount == 1){
+		$genre=$line;
+		chomp($genre);
+	    }elsif (($linecount == 2)&&($multiartists==0)){
+		$artist_raw=$line;
+		chomp($artist_raw);
+		$artist=$artist_raw;
+		$artist=&correctname($artist);
+	    } elsif ((($linecount == 3)&&($multiartists==0))||
+		     (($linecount == 2)&&($multiartists==1))){
+		$album=$line;
+		chomp($album);
+	    }else{
+		if($multiartists==1){
+		    if(($linecount % 2)==0){
+			# then it's an even numbered line and is a title
+			$title_raw=$line;
+			chomp($title_raw);
+			$title=$title_raw;
+			$title=&correctname($title);
+			if ($filecount < 10){
+			    $origname="track0".$filecount.".cdda.wav";
+			    $filename="$artist-0".$filecount."-$title.ogg";
+			}else {
+			    $origname="track".$filecount.".cdda.wav";
+			    $filename="$artist-".$filecount."-$title.ogg";
+			}
+			$oggcmd="$OGGBASE -o $filename -a \"$artist_raw\" -t \"$title_raw\""; 
+			$oggcmd="$oggcmd -l \"$album\" -G \"$genre\" $origname";
+			system($oggcmd);
+			
+			# unlink($origname);
+			
+			++$filecount;
+		    } else {
+			# it's an odd numbered line and is an artist
+			$artist_raw=$line;
+			chomp($artist_raw);
+			$artist=$artist_raw;
+			$artist=&correctname($artist);
+		    }
+		} else {
+ 		    $title_raw=$line;
+	 	    chomp($title_raw);
+		    $title=$title_raw;
+		    $title=&correctname($title);
+		    if ($filecount < 10){
+			$origname="track0".$filecount.".cdda.wav";
+			$filename="$artist-0".$filecount."-$title.ogg";
+		    }else {
+			$origname="track".$filecount.".cdda.wav";
+			$filename="$artist-".$filecount."-$title.ogg";
+ 		    }
+ 		    $oggcmd="$OGGBASE -o $filename -a \"$artist_raw\" -t \"$title_raw\""; 
+		    $oggcmd="$oggcmd -l \"$album\" -G \"$genre\" $origname";
+ 		    system($oggcmd);
+		    
+ 		    # unlink($origname);
+		    
+ 		    ++$filecount;
+	 	}
+ 	    }
+	    ++$linecount;
+	}
+	
+    }
+    close NAMES;
+}
+
+sub printusage{
+    print "\nUsage is cdtoogg [--norip] [--multi] [-2] namefile\n";
+    print "If --norip, it won't rip the CD, it will assume the files\n";
+    print "in the current directory.\n";
+    print "If --multi, it will assume the text file is in the multi form\n";
+    print "If -2, it will use the second drive - /dev/scd1\n";
+    print "namefile is a text file is this form for normal:\n"; 
+    print "Genre\n";
+    print "Artist Name\n";
+    print "Album\n";
+    print "Song Title 1\n";
+    print "Song Title 2\n";
+    print "etc..\n\n";
+    print "\nAnd this form for --multi:\n";
+    print "Genre\n";
+    print "Album\n";
+    print "Artist Name\n";
+    print "Song Title 1\n";
+    print "Artist Name\n";
+    print "Song Title 2\n";
+    print "etc..\n\n";
+    print "Genre and Album can be blank (MAKE SURE TO PUT THE NEWLINES IN),\n";
+    print "they are only used for file tags. Other fields cannot be blank\n";
+    print "because they are used for filenames.\n\n";
+    exit(0);
+}
+
+sub correctname {
+    my ( $arg2 ) = @_;
+
+    $arg2 =~ s/\'//g; #replace ' with nothing
+    $arg2 =~ s/[^\w\.\-]/_/g; #replace non-word or . or - with _
+    $arg2 =~ s/\_+\-/\-/g; #replace _- with -
+    $arg2 =~ s/\-\_+/\-/g; #replace -_ with -
+    $arg2 =~ s/\_+/\_/g; #replace __ with _
+    $arg2 =~ s/^\_+//;   #remove leading __'s
+    $arg2 =~ s/\_+$//;   #remove trailing __'s
+    $arg2 =~ s/\.+/\./g; #replace .. with .
+    $arg2 =~ s/\_+\./\./g; #replace _. with .
+    $arg2 =~ s/\.\_+/\./g; #replace ._ with .
+
+    return $arg2;
+}
+
+
+
+

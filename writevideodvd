@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# the the number of args > 0 and isn't then pass them to the command
+# else print the idiot message
+
+if [ $# -gt 0 ]; then
+
+    # The two $1's use the directory name as the volume ID
+    growisofs -dvd-compat -Z /dev/dvd -dvd-video -V $1 $1
+else
+    echo ""
+    echo "Usage: writevideodvd directory"
+    echo ""
+    echo "Where directory contains the file structure for the DVD"
+fi	
+
+

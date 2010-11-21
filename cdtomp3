@@ -1,0 +1,4 @@
+#!/bin/sh
+cdparanoia -w -B -d /dev/scd0 -X
+eject /dev/scd0
+mlame *wav

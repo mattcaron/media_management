@@ -1,0 +1,4 @@
+#!/bin/sh
+# find ~/pub/music -name *mp3 -execdir mp3gain -r -k '{}' \;
+find ~/pub/music -name *ogg -execdir vorbisgain -rfs '{}' \;
+

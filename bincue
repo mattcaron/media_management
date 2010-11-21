@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# the the number of args > 0 and isn't then pass them to the command
+# else print the idiot message
+
+if [ $# -gt 0 ]; then
+    umount /dev/sr0
+    cdrdao read-cd --datafile $1.bin --driver generic-mmc:0x20000 --device /dev/cdrom --read-raw $1.toc
+    toc2cue $1.toc $1.cue
+    rm $1.toc
+    eject /dev/sr0
+else
+	echo "Usage: $0 filename"
+fi
+

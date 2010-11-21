@@ -1,0 +1,5 @@
+#!/bin/sh
+# formats a dvd with basic UDF structures
+        cdrwtool -d device -q
+
+

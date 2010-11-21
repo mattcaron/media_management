@@ -1,0 +1,12 @@
+#! /bin/sh
+if [ $# -gt 0 ]; then
+    if [ $1 = "-na" ]; then 
+	shift
+	cdparanoia -w -B -d /dev/cdrom $@
+    else
+	cdparanoia -w -B -d /dev/cdrom -X $@
+    fi
+else	
+    cdparanoia -w -B -d /dev/cdrom -X $@
+fi
+

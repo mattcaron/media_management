@@ -1,0 +1,4 @@
+#!/bin/sh
+wodim -v driveropts=burnfree dev=/dev/cdrom -dao -eject -useinfo $@ -audio *.wav
+
+

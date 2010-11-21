@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# the the number of args > 0 and isn't then pass them to the command
+# else print the idiot message
+
+if [ $# -gt 0 ]; then
+
+nice -19 dd if=/dev/scd0 of=$@ bs=1024k
+eject /dev/scd0
+isovfy $@ # verify the image afterward
+
+else
+	echo "Usage: ripcd filename.raw"
+fi
+

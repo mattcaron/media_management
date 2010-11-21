@@ -1,0 +1,108 @@
+#!/usr/bin/perl -w
+
+use strict;
+use diagnostics; 
+
+if ($#ARGV != 0)
+  {
+    &printusage;
+  }
+# Check and make sure there are args before doing 
+# anything with them
+
+my @args=@ARGV;
+
+&main;
+
+sub main
+  {
+    
+    my $arg="$args[0]";      
+    my $counter=0;
+    my $line;
+    my $artist;
+    my $title;
+    my @move;
+    my $number;
+    my $filename;
+    my $origname;
+    my @list;
+    my ($help,$qmark)=($arg,$arg);
+    
+    $help=~/help/;
+    $qmark=~/\?/; # ? needs to be escaped in TCSH and shit....
+    
+    if (($help eq "help") || ($qmark eq "?"))
+      {
+        &printusage;
+      }
+    else 
+      {
+        open (NAMES, "$arg") || die "Can't open file $arg.\n";
+        while ($line=<NAMES>)
+          {
+            if ($counter == 0) 
+              {
+                $artist=$line;
+                chomp($artist);
+                $artist=&correctname($artist);
+                ++$counter;
+              }
+            else
+              {
+                $title=$line;
+                chomp($title);
+                $title=&correctname($title);
+                @list=("$counter");
+                if ($counter < 10)
+                  {                 
+                    $origname="track0".$counter.".cdda.mp3";
+                    $filename="$artist-0".$counter."-$title.mp3";
+                  }
+                else
+                  {
+                    $origname="track".$counter.".cdda.mp3";
+                    $filename="$artist-".$counter."-$title.mp3";
+                  }
+
+                rename ($origname,$filename);
+                ++$counter;
+              }
+      
+          }
+      }
+     close NAMES;
+  }
+
+sub printusage
+  {
+    print "Usage is batchname namefile\n";
+    print "Where name file is a text file in this form:\n";
+    print "Artist Name\n";
+    print "Song 1\n";
+    print "Song 2\n";
+    print "etc..\n";
+    exit(0);
+  }
+
+sub correctname
+  {
+    my ( $arg2 ) = @_;
+
+    $arg2 =~ s/\'//g; #replace ' with nothing
+    $arg2 =~ s/[^\w\.\-]/_/g; #replace non-word or . or - with _
+    $arg2 =~ s/\_+\-/\-/g; #replace _- with -
+    $arg2 =~ s/\-\_+/\-/g; #replace -_ with -
+    $arg2 =~ s/\_+/\_/g; #replace __ with _
+    $arg2 =~ s/^\_+//;   #remove leading __'s
+    $arg2 =~ s/\_+$//;   #remove trailing __'s
+    $arg2 =~ s/\.+/\./g; #replace .. with .
+    $arg2 =~ s/\_+\./\./g; #replace _. with .
+    $arg2 =~ s/\.\_+/\./g; #replace ._ with .
+
+    return $arg2;
+  }
+
+
+
+

@@ -1,0 +1,5 @@
+#!/bin/sh
+# blanks a DVD
+ 	dvd+rw-format -force /dev/hdc
+
+

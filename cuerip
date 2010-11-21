@@ -1,0 +1,8 @@
+#!/bin/bash
+
+echo Unmounting cdrom
+umount /media/cdrom
+
+echo Ripping cd to $1.bin/cue.
+cdrdao read-cd --datafile $1.bin --driver generic-mmc:0x20000 --device /dev/cdrom --read-raw $1.toc
+toc2cue $1.toc $1.cue

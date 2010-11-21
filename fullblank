@@ -1,0 +1,5 @@
+#!/bin/sh
+# blanks a CD-RW
+wodim -v dev=/dev/cdrom blank=all $@
+
+

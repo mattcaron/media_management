@@ -1,0 +1,3 @@
+#!/bin/sh
+find ~/pub/music -name *mp3 -exec eyeD3 --to-v2.4 {} \;
+
