@@ -1,12 +1,19 @@
 #! /bin/sh
+
+DRIVE="/dev/cdrom"
+
+if [ `hostname` = "case" ]; then
+    DRIVE="/dev/cdrom3"
+fi
+
 if [ $# -gt 0 ]; then
     if [ $1 = "-na" ]; then 
 	shift
-	cdparanoia -w -B -d /dev/cdrom $@
+	cdparanoia -w -B -d $DRIVE $@
     else
-	cdparanoia -w -B -d /dev/cdrom -X $@
+	cdparanoia -w -B -d $DRIVE -X $@
     fi
 else	
-    cdparanoia -w -B -d /dev/cdrom -X $@
+    cdparanoia -w -B -d $DRIVE -X $@
 fi
 
