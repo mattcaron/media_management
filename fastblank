@@ -1,4 +1,17 @@
 #!/bin/sh
 # blanks a CD-RW
-wodim -v dev=/dev/cdrom blank=fast $@
+
+DRIVE=/dev/cdrw
+# fixup for case's multiple drive layout - use the newer,
+# better drive for burns, which is drive "1";
+if [ "`hostname`" = "case" ]; then
+    DRIVE=$DRIVE"1"
+fi
+
+BLANK=fast
+if [ "`basename $0`" = "fullblank" ]; then
+    BLANK=full
+fi
+
+wodim -v dev=$DRIVE blank=$BLANK $@
 
