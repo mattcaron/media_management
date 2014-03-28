@@ -1,10 +1,11 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 ####################################################
 #
-# sync_playlists - synchronize playlists to Mass Storage Device type
-#                  players
-# Copyright (C) 2010 Matthew Caron <matt@mattcaron.net>
+# managae_playlists - create and synchronize playlists to Mass Storage
+#                     Device type players, SD cards, USB sticks, etc.
+#
+# Copyright (C) 2014 Matthew Caron <matt@mattcaron.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License, version 2, as
@@ -20,109 +21,217 @@
 ####################################################
 
 use strict;
+use warnings;
+use diagnostics;
+
 use File::Spec;
 use File::Path;
 use File::Copy;
 use Getopt::Long;
 use Data::Dumper;
 
-## IMPORTANT - if your user name just happens to be "matt", make sure
-## to comment out the section NOT FOR NORMAL PEOPLE, below
-
 ## Constants
-# Prefix which should be knocked off things copied.
-my $source_dir = $ENV{"HOME"} . "/Music";
 
-# target device base directory
-my $device_dir = "/media/IPOD3G";
+my $PLAYLIST_PREFIX = "00_";
+my $PLAYLIST_SUFFIX = ".m3u";
 
-# target subdir to which music is to be copied
-my $target_subdir = "Music";
+# Filter to be passed to the shell's find in order to find files
+my $FIND_FILTER = "-type f -name '*.mp3' -or -name '*.ogg' -or -name '*.wav'";
+my $FIND = `which find`;
+chomp($FIND);
 
-## End Constants
+## END CONSTANTS
 
-# target dir to which music is to be copied
-my $target_dir = "${device_dir}/${target_subdir}";
-
-# playlist directory
-my $playlist_dir = "${device_dir}/Playlists";
-
-sub sync($$)
+##
+# Normalize the playlist name
+#
+# This allows the use of shortnames, e.g. "blues", and makes sure they
+# have the proper prefix and suffix.
+#
+# This automatically discards 
+#
+# @param name Name to be normalized
+#
+# @return The normalized name
+sub normalizePlaylist($)
 {
-    my ($force, $verbose) = @_;
+    my ($playlist) = @_;
+
+    if ($playlist !~ /^$PLAYLIST_PREFIX/) {
+        $playlist = $PLAYLIST_PREFIX . $playlist;
+    }
+
+    if ($playlist !~ /$PLAYLIST_SUFFIX$/) {
+        $playlist = $playlist . $PLAYLIST_SUFFIX;
+    }
+
+    return $playlist;
+}
+
+
+##
+# Add to a playlist, optionally overwriting the playlist
+#
+# @param overwrite 1 to overwrite playlist, 0 to not.
+# @param verbose 1 to be verbose.
+# @param normalize 1 to normalize the playlist name.
+#
+# @return 0 on success
+# @return a count of the failures on error
+#
+sub add($$$)
+{
+    my ($overwrite, $verbose, $normalize) = @_;
+
+    my $retval = 1;
+    my $failCount = 0;
+
+    my $op = ">>";
+    
+    if ($overwrite) {
+        $op = ">";
+    }
+
+    my $playlist = shift(@ARGV);
+
+    # if the playlist has any slashes in it, then someone didn't read
+    # the instructions
+    if ($playlist =~ /\//) {
+        print("Playlists must be in the current directory\n");
+    }
+    else {
+
+        if ($normalize) {
+            $playlist = normalizePlaylist($playlist);
+        }
+        
+        if (!defined(open(PLAYLIST, $op, $playlist))) {
+            print("Can't open ${playlist}: $!\n");
+        }
+        else {
+            foreach my $directory (@ARGV) {
+                if ($verbose) {
+                    print("Adding files from ${directory}\n");
+                }
+                
+                if (!defined(open(FIND, "-|", 
+                                  "${FIND} ${directory} ${FIND_FILTER}"))) {
+                    print("Can't add ${directory}: $!\n");
+                    ++$failCount;
+                }
+                
+                while (<FIND>) {
+                    my $line = $_;
+                    
+                    print(PLAYLIST "${line}");
+                }
+                close(FIND);
+            }
+            
+            close(PLAYLIST);
+
+            $retval = $failCount;
+        }
+    }
+    
+    return $retval;
+}
+
+##
+# Push files dictated by playlists, and the playlists to a destination
+#
+# This won't copy files that exist, unless force is specified.
+#
+# This is called sync because push is a builtin array op.
+#
+# @param force 1 to always copy files, even if they exist.
+# @param verbose 1 to be verbose.
+# @param normalize 1 to normalize the playlist name.
+#
+# @return 0 on success
+# @return a count of the failures on error
+#
+sub sync($$$)
+{
+    my ($force, $verbose, $normalize) = @_;
+    my $failCount = 0;
+
+    my $destination = shift(@ARGV);
 
     foreach my $playlist (@ARGV){
-        print("Transferring files listed in ${playlist}\n");
-
-        my ($volume, $dir, $playlist_filename) =
-            File::Spec->splitpath($playlist);
-        my $playlist_destination = $playlist_dir . "/" . $playlist_filename;
-
-        if (!-d $playlist_dir) {
-            if ($verbose) {
-                print("\n\nMaking directory ${playlist_dir}...\n\n");
-            }
-
-            mkpath($playlist_dir) ||
-                die("Cannot mkpath ${playlist_dir}: $!");
+        if ($normalize) {
+            $playlist = normalizePlaylist($playlist);
         }
 
-        open(PLAYLIST_IN, "<", $playlist) ||
-            die("Unable to open ${playlist}: $!");
-        if(!open(PLAYLIST_OUT, ">", $playlist_destination)){
-            close(PLAYLIST_IN);
-            die("Unable to open ${playlist_destination}: $!");
+        if ($verbose) {
+            print("Transferring files listed in ${playlist}\n");
         }
 
-        while (my $line = <PLAYLIST_IN>) {
-            if ($line =~ /^#/) {
-                # don't full process comments, just write them out to the file
-                print(PLAYLIST_OUT $line);
+        if (!defined(open(PLAYLIST, "<", $playlist))) {
+            print("Unable to open ${playlist}: $!\n");
+            ++$failCount;
+        }
+        else {
+            # copy the playlist file
+            my $playlist_destination = $destination . "/" . $playlist;
+            if (!copy($playlist, $playlist_destination)) {
+                print("WARNING: Could copy ${playlist} to " .
+                      "${playlist_destination}: $!\n");
+                ++$failCount
             }
-            else {
-                my $source_file = $line;
-
-                # replace the line with appropriate relative pathname
-                $line =~ s/$source_dir/\.\.\/$target_subdir/;
-                print(PLAYLIST_OUT $line);
-
-                chomp($source_file);
-                my $destination_file = $source_file;
-                $destination_file =~ s/^$source_dir/$target_dir/;
-                my ($volume, $destination_dir, $file) =
-                    File::Spec->splitpath($destination_file);
-                if (!-d $destination_dir) {
-                    if ($verbose) {
-                        print("\n\nMaking directory ${destination_dir}...\n\n");
-                    }
-
-                    mkpath($destination_dir) ||
-                        die("Cannot mkpath ${destination_dir}: $!");
-                }
-
-                # quick check - only copy the file if it doesn't exist
-                # (easy, cheap optimization step)
-                if (-e $destination_file && !$force) {
-                    if ($verbose) {
-                        print("Skipping copy of ${source_file}: \n" .
-                              "         ${destination_file} already exists\n");
-                    }
+            
+            while (my $line = <PLAYLIST>) {
+                if ($line =~ /^#/) {
+                    # don't process comments, they are uncopyable
                 }
                 else {
-                    if ($verbose) {
-                        print("${source_file} => ${destination_file}\n");
+                    my $source_file = $line;
+                    chomp($source_file);
+                    my $destination_file = $destination . "/" . $source_file;
+                    my ($volume, $destination_dir, $file) =
+                      File::Spec->splitpath($destination_file);
+                    if (!-d $destination_dir) {
+                        if ($verbose) {
+                            print("\n\nMaking directory " . 
+                                  "${destination_dir}...\n");
+                        }
+                        
+                        if (!mkpath($destination_dir)) {
+                            print("Cannot mkpath ${destination_dir}: $!\n");
+                            ++$failCount;
+                        }
                     }
-
-                    # copy file to that directory
-                    copy($source_file, $destination_file) ||
-                        print("WARNING: Could copy ${source_file} to " .
-                            "${destination_file}: $!\n");
+                    
+                    # Only transfer if we made the directory (above)
+                    # or it already existed.
+                    if (-d $destination_dir) {
+                        # quick check - only copy the file if it doesn't exist
+                        # (easy, cheap optimization step)
+                        if (-e $destination_file && !$force) {
+                            if ($verbose) {
+                                print("Skipping copy of ${source_file}: \n" .
+                                      "        ${destination_file} " . 
+                                      "already exists\n");
+                            }
+                        }
+                        else {
+                            if ($verbose) {
+                                print("${source_file} => " . 
+                                      "${destination_file}\n");
+                            }
+                            
+                            # copy file to that directory
+                            if (!copy($source_file, $destination_file)) {
+                                print("WARNING: Could copy ${source_file} to " .
+                                      "${destination_file}: $!\n");
+                                ++$failCount;
+                            }
+                        }
+                    }
                 }
             }
         }
-
-        close(PLAYLIST_IN);
-        close(PLAYLIST_OUT);
+        close(PLAYLIST);
     }
 }
 
@@ -130,32 +239,77 @@ sub sync($$)
 #
 sub main()
 {
-    my ($help, $force, $verbose) = 0;
+    my $help = 0;
+    my $force = 0;
+    my $verbose = 0;
+    my $push = 0;
+    my $add = 0;
+    my $new = 0;
+    my $opcount = 0;
+    my $normalize = 0;
+    my $retVal = 1;
 
     my $options = GetOptions(
         "help|?"        => \$help,
         "force"         => \$force,
-        "verbose"       => \$verbose
+        "verbose"       => \$verbose,
+        "push"          => \$push,
+        "add"           => \$add,
+        "new"           => \$new,
+        "no-normalize"  => \$normalize
         );
+
+    # Normalize is inverted from its command
+    $normalize = !$normalize;
 
     my ($volume, $dir, $command) = File::Spec->splitpath($0);
 
     my $usage   = qq^
-${command} [options] playlist1 [playlist2..]
+${command} --push [options] destination playlist1 [playlist2...]
+${command} --add [options] playlist directory1 [directory2...]
+${command} --new [options] playlist directory1 [directory2...]
+
+Commands are:
+  --push       Push the listed playlists to destination.
+  --add        Add the listed directories to playlist.
+  --new        Like add, but deletes the playlist first.
+
 Options are:
-  --help, --?  displays this help
-  --force      force copy, even if target exists
-                     (only used for sync, ignored otherwise)
-  --verbose    be more verbose
+  --help, --?    displays this help
+  --force        force copy, even if target exists (push only)
+  --verbose      be more verbose
+  --no-normalize don't normalize playlist names
 ^;
 
-    if($help)
-    {
-        print($usage);
-        exit(0);
+    # only allow one operation at a time
+    foreach my $op ($push, $add, $new) {
+        if ($op != 0) {
+            ++$opcount;
+        }
     }
 
-    sync($force, $verbose);
+    if ($opcount != 1) {
+        print("One and only one operation must be specified.\n");
+        $help = 1;
+    }
+
+    if ($help) {
+        print($usage);
+        $retVal = 0;
+    }
+    else {
+        if ($push) {
+            $retVal = sync($force, $verbose, $normalize);
+        }
+        elsif ($add) {
+            $retVal = add(0, $verbose, $normalize);
+        }
+        elsif ($new) {
+            $retVal = add(1, $verbose, $normalize);
+        }
+    }
+
+    return $retVal;
 }
 
 &main();
