@@ -167,64 +167,83 @@ sub sync($$$)
             print("Transferring files listed in ${playlist}\n");
         }
 
-        if (!defined(open(PLAYLIST, "<", $playlist))) {
-            print("Unable to open ${playlist}: $!\n");
-            ++$failCount;
-        }
-        else {
-            # copy the playlist file
-            my $playlist_destination = $destination . "/" . $playlist;
-            if (!copy($playlist, $playlist_destination)) {
-                print("WARNING: Could copy ${playlist} to " .
-                      "${playlist_destination}: $!\n");
-                ++$failCount
+        # Make sure the overall destination directory exists
+        if (!-d $destination) {
+            if ($verbose) {
+                print("\n\nMaking directory ${destination}...\n");
             }
             
-            while (my $line = <PLAYLIST>) {
-                if ($line =~ /^#/) {
-                    # don't process comments, they are uncopyable
+            if (!mkpath($destination)) {
+                print("Cannot mkpath ${destination}: $!\n");
+                ++$failCount;
+            }
+        }
+
+        # if it still doesn't exist, we have an error, don't copy anything
+        if (-d $destination) {
+            if (!defined(open(PLAYLIST, "<", $playlist))) {
+                print("Unable to open ${playlist}: $!\n");
+                ++$failCount;
+            }
+            else {
+                # copy the playlist file
+                my $playlist_destination = $destination . "/" . $playlist;
+                if (!copy($playlist, $playlist_destination)) {
+                    print("WARNING: Couldn't copy ${playlist} to " .
+                          "${playlist_destination}: $!\n");
+                    ++$failCount
                 }
-                else {
-                    my $source_file = $line;
-                    chomp($source_file);
-                    my $destination_file = $destination . "/" . $source_file;
-                    my ($volume, $destination_dir, $file) =
-                      File::Spec->splitpath($destination_file);
-                    if (!-d $destination_dir) {
-                        if ($verbose) {
-                            print("\n\nMaking directory " . 
-                                  "${destination_dir}...\n");
-                        }
-                        
-                        if (!mkpath($destination_dir)) {
-                            print("Cannot mkpath ${destination_dir}: $!\n");
-                            ++$failCount;
-                        }
+                
+                while (my $line = <PLAYLIST>) {
+                    if ($line =~ /^#/) {
+                        # don't process comments, they are uncopyable
                     }
-                    
-                    # Only transfer if we made the directory (above)
-                    # or it already existed.
-                    if (-d $destination_dir) {
-                        # quick check - only copy the file if it doesn't exist
-                        # (easy, cheap optimization step)
-                        if (-e $destination_file && !$force) {
+                    else {
+                        my $source_file = $line;
+                        chomp($source_file);
+                        my $destination_file = $destination . "/" . 
+                          $source_file;
+                        my ($volume, $destination_dir, $file) =
+                          File::Spec->splitpath($destination_file);
+                        if (!-d $destination_dir) {
                             if ($verbose) {
-                                print("Skipping copy of ${source_file}: \n" .
-                                      "        ${destination_file} " . 
-                                      "already exists\n");
-                            }
-                        }
-                        else {
-                            if ($verbose) {
-                                print("${source_file} => " . 
-                                      "${destination_file}\n");
+                                print("\n\nMaking directory " . 
+                                      "${destination_dir}...\n");
                             }
                             
-                            # copy file to that directory
-                            if (!copy($source_file, $destination_file)) {
-                                print("WARNING: Could copy ${source_file} to " .
-                                      "${destination_file}: $!\n");
+                            if (!mkpath($destination_dir)) {
+                                print("Cannot mkpath ${destination_dir}: $!\n");
                                 ++$failCount;
+                            }
+                        }
+                        
+                        # Only transfer if we made the directory (above)
+                        # or it already existed.
+                        if (-d $destination_dir) {
+                            # quick check - only copy the file if it
+                            # doesn't exist (easy, cheap optimization
+                            # step)
+                            if (-e $destination_file && !$force) {
+                                if ($verbose) {
+                                    print("Skipping copy of " . 
+                                          "${source_file}: \n" .
+                                          "        ${destination_file} " . 
+                                          "already exists\n");
+                                }
+                            }
+                            else {
+                                if ($verbose) {
+                                    print("${source_file} => " . 
+                                          "${destination_file}\n");
+                                }
+                                
+                                # copy file to that directory
+                                if (!copy($source_file, $destination_file)) {
+                                    print("WARNING: Couldn't copy " . 
+                                          "${source_file} to " .
+                                          "${destination_file}: $!\n");
+                                    ++$failCount;
+                                }
                             }
                         }
                     }
