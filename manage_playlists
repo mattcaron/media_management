@@ -124,6 +124,9 @@ sub add($$$)
                     my $line = $_;
                     
                     print(PLAYLIST "${line}");
+                    if ($verbose) {
+                        print($line);
+                    }
                 }
                 close(FIND);
             }
@@ -136,6 +139,72 @@ sub add($$$)
     
     return $retval;
 }
+
+##
+# Resolve the destination to an appropriate absolute path
+#
+# This takes the destination and:
+# 1. If it is an absolute path, return it
+# 2. If it is not an absolute path, but the part before the first /
+#    matches the last part of a filesystem as returned by mount,
+#    construct an absolute path from these data points.
+# 3. Else, it must be a relative path, just use it.
+#
+# This logic basically simplifies to:
+#
+# If it's an absolute path or not part of a mounted string, just use
+# it.
+#
+# @param destination Destination to be resolved.
+# @param verbose Whether or not it should be verbose.
+#
+# @return A resolved destination (absolute path).
+#
+sub resolveDestination($$)
+{
+    my ($destination, $verbose) = @_;
+
+    my $resolved = $destination;
+
+    if ($destination !~ /^\//) {
+        my @parts = split("/", $destination);
+        my $match = $parts[0];
+
+        if ($verbose) {
+            print("Looking for mount points matching ${match}.\n");
+        }
+
+        if (!defined(open(MOUNT, "-|", "mount"))) {
+            print("WARNING: Unable to open mount command: $!\n");
+        }
+        else {
+            my $done = 0;
+            while (defined(my $line = <MOUNT>) && !$done) {
+                $line =~ /^.* on (.*) type .*$/;
+                my $mount = $1;
+
+                if ($mount =~ /$match$/) {
+                    if ($verbose) {
+                        print("Found matching mount point ${mount}.\n");
+                    }
+                    $done = 1;
+                    $destination =~ s/^$match/$mount/;
+                    $resolved = $destination;
+                }
+            }
+
+            if (!$done && $verbose) {
+                print("Didn't find a matching mount point, " . 
+                      "assuming relative path\n");
+            }
+        }
+        
+    }
+
+    return $resolved;
+}
+
+
 
 ##
 # Push files dictated by playlists, and the playlists to a destination
@@ -158,6 +227,8 @@ sub sync($$$)
 
     my $destination = shift(@ARGV);
 
+    $destination = resolveDestination($destination, $verbose);
+
     foreach my $playlist (@ARGV){
         if ($normalize) {
             $playlist = normalizePlaylist($playlist);
@@ -170,7 +241,7 @@ sub sync($$$)
         # Make sure the overall destination directory exists
         if (!-d $destination) {
             if ($verbose) {
-                print("\n\nMaking directory ${destination}...\n");
+                print("\nMaking directory ${destination}...\n");
             }
             
             if (!mkpath($destination)) {
@@ -207,7 +278,7 @@ sub sync($$$)
                           File::Spec->splitpath($destination_file);
                         if (!-d $destination_dir) {
                             if ($verbose) {
-                                print("\n\nMaking directory " . 
+                                print("\nMaking directory " . 
                                       "${destination_dir}...\n");
                             }
                             
@@ -299,6 +370,19 @@ Options are:
   --force        force copy, even if target exists (push only)
   --verbose      be more verbose
   --no-normalize don't normalize playlist names
+
+Notes:
+ 1. Playlists must always use relative paths.
+ 2. Playlists must always be in the current directory.
+ 3. Directories fed to add must be relative to the current directory.
+ 4. Playlists will be normalized to 00_playlist.m3u unless
+    --no-normalize is passed.
+ 5. For push, the destination can be either an absolute path or part
+    of the full path of a mounted filesystem, in which case that will
+    be used. For example, if a USB stick is mounted as /media/USB, and
+    you specify USB/Music, then the playlists will be pushed to
+    /media/USB/Music, and all files listed in those playlists will be
+    pushed to the paths relative to /media/USB/Music.
 ^;
 
     # only allow one operation at a time
