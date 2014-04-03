@@ -37,8 +37,25 @@ my $PLAYLIST_SUFFIX = ".m3u";
 
 # Filter to be passed to the shell's find in order to find files
 my $FIND_FILTER = "-type f -name '*.mp3' -or -name '*.ogg' -or -name '*.wav'";
+# (We're not going to test that you have this, because everyone does.
 my $FIND = `which find`;
 chomp($FIND);
+
+my $ogginfo = `which ogginfo`;
+chomp($ogginfo);
+if (!defined($ogginfo) || length($ogginfo) == 0) {
+    printf("Warning - ogginfo not found, EXTINF entries " . 
+           "for ogg files won't be possible\n\n");
+    $ogginfo = undef;
+}
+
+my $mp3info = `which mp3info`;
+chomp($mp3info);
+if (!defined($mp3info) || length($mp3info) == 0) {
+    printf("Warning - mp3info not found, EXTINF entries " . 
+           "for mp3 files won't be possible\n\n");
+    $mp3info = undef;
+}
 
 ## END CONSTANTS
 
@@ -68,6 +85,94 @@ sub normalizePlaylist($)
     return $playlist;
 }
 
+##
+# Calculate the runtime in seconds.
+#
+# This converts playlist lengths of things like XXm:YY.YYYYs to an
+# integer number of seconds. Decimal seconds are truncated.
+#
+# @param runtime The runtime string in the above format.
+#
+# @return The runtime in seconds
+#
+sub calculatRuntimeSeconds($)
+{
+    my ($runtime) = @_;
+
+    my $minutes = 0;
+    my $seconds = 0;
+
+    # replace all leading and trailing whitespace (aka trim())
+    $runtime =~ s/^\s+//;
+    $runtime =~ s/\s+$//;
+
+    # Short audio files may or may not have a minutes entry
+    if ($runtime =~ /^(\d+)m/) {
+        $minutes = $1;
+        $minutes *= 60;
+    }
+    
+    # We drop the decimal seconds here. We don't care.
+    $runtime =~ /(\d+).\d+s$/;
+    $seconds = $1;
+
+    return $minutes + $seconds;
+}
+
+
+##
+# Get the EXTINF line for an ogg file
+#
+# @param file File for which we should get info
+#
+# @return EXTINF line suitable for printing to file (including
+# trailing newline)
+#
+sub getOggEXTINFLine($)
+{
+    my ($file) = @_;
+    my $extinf = "";
+
+    if (!defined(open(INFO, "-|", "${ogginfo} \"${file}\""))) {
+        print("Warning - unable to get info for ${file}: $!\n");
+    }
+    else {
+        my $runtime = "";
+        my $artist = "";
+        my $title = "";
+        while (my $line = <INFO>) {
+            chomp($line);
+            if ($line =~ /TITLE=(.*)$/) {
+                $title = $1;
+            }
+            elsif ($line =~ /ARTIST=(.*)$/) {
+                $artist = $1;
+            }
+            elsif ($line =~ /Playback length:(.*)$/) {
+                $runtime = calculatRuntimeSeconds($1);
+            }
+        }
+        $extinf = "#EXTINF:${runtime},${artist} - ${title}\n";
+    }
+
+    return $extinf;
+}
+
+##
+# Get the EXTINF line for an MP3 file
+#
+# @param file File for which we should get info
+#
+# @return EXTINF line suitable for printing to file (including
+# trailing newline)
+#
+sub getMP3EXTINFLine($)
+{
+    my ($file) = @_;
+
+    return "#EXTINF:" . `${mp3info} -p "%S,%a - %t" "${file}"` . "\n";
+}
+
 
 ##
 # Add to a playlist, optionally overwriting the playlist
@@ -75,13 +180,14 @@ sub normalizePlaylist($)
 # @param overwrite 1 to overwrite playlist, 0 to not.
 # @param verbose 1 to be verbose.
 # @param normalize 1 to normalize the playlist name.
+# @param extinf 1 to generate extinf.
 #
 # @return 0 on success
 # @return a count of the failures on error
 #
-sub add($$$)
+sub add($$$$)
 {
-    my ($overwrite, $verbose, $normalize) = @_;
+    my ($overwrite, $verbose, $normalize, $extinf) = @_;
 
     my $retval = 1;
     my $failCount = 0;
@@ -119,13 +225,38 @@ sub add($$$)
                     print("Can't add ${directory}: $!\n");
                     ++$failCount;
                 }
-                
+
+                if (!$extinf) {
+                    print(PLAYLIST "#EXTM3U\n");
+                }
+
                 while (<FIND>) {
                     my $line = $_;
-                    
-                    print(PLAYLIST "${line}");
+                    chomp($line);
+
+                    if ($extinf) {
+                        if ($line =~ /.ogg$/i) {
+                            if (defined($ogginfo)) {
+                                print(PLAYLIST getOggEXTINFLine($line));
+                            }
+                        }
+                        elsif ($line =~ /.mp3$/i) {
+                            if (defined($mp3info)) {
+                                print(PLAYLIST getMP3EXTINFLine($line));
+                            }
+                        }
+                        elsif ($verbose) {
+                            # else it's some other file format which we
+                            # don't know, but only say something if we
+                            # want verbose
+                            printf("Unknown file extension for:\n " .
+                                   "    ${line}\n");
+                        }
+                    }
+                        
+                    print(PLAYLIST "${line}\n");
                     if ($verbose) {
-                        print($line);
+                        print("${line}\n");
                     }
                 }
                 close(FIND);
@@ -338,6 +469,7 @@ sub main()
     my $new = 0;
     my $opcount = 0;
     my $normalize = 0;
+    my $extinf = 0;
     my $retVal = 1;
 
     my $options = GetOptions(
@@ -347,11 +479,13 @@ sub main()
         "push"          => \$push,
         "add"           => \$add,
         "new"           => \$new,
-        "no-normalize"  => \$normalize
+        "no-normalize"  => \$normalize,
+        "no-extinf"     => \$extinf
         );
 
-    # Normalize is inverted from its command
+    # Normalize and extinf are inverted from their commands
     $normalize = !$normalize;
+    $extinf = !$extinf;
 
     my ($volume, $dir, $command) = File::Spec->splitpath($0);
 
@@ -370,6 +504,8 @@ Options are:
   --force        force copy, even if target exists (push only)
   --verbose      be more verbose
   --no-normalize don't normalize playlist names
+  --no-extinf    don't generate EXTINF entries (which can take awhile,
+                 especially for ogg)
 
 Notes:
  1. Playlists must always use relative paths.
@@ -406,10 +542,10 @@ Notes:
             $retVal = sync($force, $verbose, $normalize);
         }
         elsif ($add) {
-            $retVal = add(0, $verbose, $normalize);
+            $retVal = add(0, $verbose, $normalize, $extinf);
         }
         elsif ($new) {
-            $retVal = add(1, $verbose, $normalize);
+            $retVal = add(1, $verbose, $normalize, $extinf);
         }
     }
 
