@@ -226,7 +226,7 @@ sub add($$$$)
                     ++$failCount;
                 }
 
-                if (!$extinf) {
+                if ($extinf) {
                     print(PLAYLIST "#EXTM3U\n");
                 }
 
