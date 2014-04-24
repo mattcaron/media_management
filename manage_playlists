@@ -142,10 +142,10 @@ sub getOggEXTINFLine($)
         my $title = "";
         while (my $line = <INFO>) {
             chomp($line);
-            if ($line =~ /TITLE=(.*)$/) {
+            if ($line =~ /^\s+TITLE=(.*)$/) {
                 $title = $1;
             }
-            elsif ($line =~ /ARTIST=(.*)$/) {
+            elsif ($line =~ /^\s+ARTIST=(.*)$/) {
                 $artist = $1;
             }
             elsif ($line =~ /Playback length:(.*)$/) {
