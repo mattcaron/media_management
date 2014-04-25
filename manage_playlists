@@ -299,7 +299,7 @@ sub resolveDestination($$)
 
     if ($destination !~ /^\//) {
         my @parts = split("/", $destination);
-        my $match = $parts[0];
+        my $match = join("/", @parts[0..$#parts-1]);
 
         if ($verbose) {
             print("Looking for mount points matching ${match}.\n");
