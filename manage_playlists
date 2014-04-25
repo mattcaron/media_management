@@ -314,12 +314,12 @@ sub resolveDestination($$)
                 $line =~ /^.* on (.*) type .*$/;
                 my $mount = $1;
 
-                if ($mount =~ /$match$/) {
+                if ($mount =~ /\Q$match\E$/) {
                     if ($verbose) {
                         print("Found matching mount point ${mount}.\n");
                     }
                     $done = 1;
-                    $destination =~ s/^$match/$mount/;
+                    $destination =~ s/^\Q$match\E/$mount/;
                     $resolved = $destination;
                 }
             }
