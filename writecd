@@ -25,7 +25,7 @@ if (scalar(@ARGV) > 0) {
         $drive .= "1";
     }
 
-    `wodim -v driveropts=burnfree dev=${drive} -dao -eject ${args}`
+    `wodim -vvv driveropts=burnfree dev=${drive} -dao -eject ${args}`
 }
 else {
     print <<EOF
