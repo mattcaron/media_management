@@ -4,7 +4,7 @@ BASEDIR=$HOME/android/Card
 
 if [ -d /pub/music ]; then
    echo music	   
-   rsync -aLh --delete $HOME/pub/music/ $BASEDIR/Music
+   rsync -aLh --inplace --delete $HOME/pub/music/ $BASEDIR/Music
 else
    echo skipping music, not mounted
 fi
@@ -12,5 +12,5 @@ fi
 cp -a ~/.keepassx/* $BASEDIR/keepassx/.
 cp -a ~/.ssh/id_dsa $BASEDIR/ssh/.
 echo pulling backups
-rsync -aLh --delete $BASEDIR/backups/ $HOME/workspace/backups/phone
+rsync -aLh --inplace --delete $BASEDIR/backups/ $HOME/workspace/backups/phone
 echo done
