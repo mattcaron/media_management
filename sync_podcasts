@@ -26,6 +26,18 @@ use File::Copy;
 use Getopt::Long;
 use Data::Dumper;
 
+# Force use of stat on directories rather than link count. This was used for
+# file systems that do not have an nlink count matching the number of
+# sub-directories. Examples are ISO-9660 (CD-ROM), AFS, HPFS
+# (OS/2 file system), FAT (DOS file system) and a couple of others.
+#
+# You shouldn't need to set this variable, since File::Find should now detect
+# such file systems on-the-fly and switch itself to using stat. This works
+# even for parts of your file system, like a mounted CD-ROM.
+#
+# MattCaron - except it suddenly broke around January, 2014.
+$File::Find::dont_use_nlink = 1;
+
 ## IMPORTANT - if your user name just happens to be "matt", make sure
 ## to comment out the section NOT FOR NORMAL PEOPLE, below
 
