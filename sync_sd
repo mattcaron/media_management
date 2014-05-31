@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Default assumes SD card 
+BASEDIR=/media/$USER/SD
+
+echo $0 | grep tablet 
+if [ $? -eq 0 ] ; then
+    BASEDIR="$HOME/android/Micro SD Card"
+fi
+
+echo boardgames
+rsync -aLh --delete $HOME/gaming/boardgames/ "$BASEDIR/boardgames"
+echo ccgs
+rsync -aLh --delete $HOME/gaming/ccgs/ "$BASEDIR/ccgs"
+echo cards
+rsync -aLh --delete $HOME/gaming/ccgs/ "$BASEDIR/cards"
+echo dice
+rsync -aLh --delete $HOME/gaming/dice/ "$BASEDIR/dice"
+echo literature
+rsync -aLh --delete $HOME/gaming/literature/ "$BASEDIR/literature"
+echo maps
+rsync -aLh --delete $HOME/gaming/maps/ "$BASEDIR/maps"
+echo mine
+rsync -aLh --delete $HOME/gaming/mine/ "$BASEDIR/mine"
+echo minis
+rsync -aLh --delete $HOME/gaming/minis/ "$BASEDIR/minis"
+echo molds
+rsync -aLh --delete $HOME/gaming/molds/ "$BASEDIR/molds"
+echo rpgs
+rsync -aLh --delete $HOME/gaming/rpgs/ "$BASEDIR/rpgs"
+echo reading
+rsync -aLh --delete $HOME/reading/ "$BASEDIR/reading"
+cp -a ~/.keepassx/* "$BASEDIR/keepassx/."
+cp -a ~/.ssh/id_dsa "$BASEDIR/ssh/."
+echo pulling backups
+rsync -aLh --delete "$BASEDIR/backups/" $HOME/workspace/backups/tablet
+echo done
