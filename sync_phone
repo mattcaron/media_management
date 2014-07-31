@@ -2,7 +2,7 @@
 
 BASEDIR=/media/matt/phone
 
-if [ -d /pub/music ]; then
+if [ -d $HOME/pub/music ]; then
    echo music	   
    rsync -aLh --inplace --delete $HOME/pub/music/ $BASEDIR/Music
 else
