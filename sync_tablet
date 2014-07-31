@@ -3,11 +3,6 @@
 # Default assumes SD card 
 BASEDIR=/media/$USER/SD
 
-echo $0 | grep tablet 
-if [ $? -eq 0 ] ; then
-    BASEDIR="$HOME/android/Micro SD Card"
-fi
-
 echo boardgames
 rsync -aLh --inplace --delete $HOME/gaming/boardgames/ "$BASEDIR/boardgames"
 echo ccgs
