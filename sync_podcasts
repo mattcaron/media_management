@@ -49,11 +49,11 @@ my $source_dir = $ENV{"HOME"} . "/pub/podcasts";
 my $podcast_log_file = "sync_podcasts.log";
 
 # target directory to which podcasts are to be copied
-my $target_dir = "/media/IPOD/podcasts";
+my $target_dir = "/media/matt/IPOD/podcasts";
 
 # portion of above representing the device's location on your machine.
 # this is removed from playlists so that the relative path is correct
-my $playlist_base_remove = "/media/IPOD";
+my $playlist_base_remove = "/media/matt/IPOD";
 
 # name of the automagically generated playlist file
 my $auto_playlist_file = "00_playlist.m3u";
