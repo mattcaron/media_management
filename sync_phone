@@ -16,5 +16,7 @@ rsync -aLh --inplace --delete $BASEDIR/backups/ $HOME/workspace/backups/phone
 echo done
 echo pulling pics
 rsync -aLh --inplace $BASEDIR/DCIM/Camera/ $HOME/workspace/pics/photos/new
+echo moving pics to gallery
+mv $BASEDIR/DCIM/Camera/* $BASEDIR/pics/.
 echo done
 
