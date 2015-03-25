@@ -116,8 +116,15 @@ if(!$build_playlist_only)
         print "Initializing logfile...\n";
     }
 
-    # Recurse through directory and find each file there and do copy
-    find(\&copy_stuff,  ($source_dir));
+    # Recurse through directory and find each file there and do copy,
+    # but sort them alphabetically.
+    find(
+       {
+        'wanted' => \&copy_stuff,
+        'preprocess' => sub { sort { $a cmp $b } @_ }
+       },
+         ($source_dir));
+
 } # end !$build_playlist_only
 
 # Recurse through and build playlists for each directory
