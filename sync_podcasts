@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 ####################################################
 #
@@ -20,6 +20,9 @@
 ####################################################
 
 use strict;
+use warnings;
+use diagnostics;
+
 use File::Find;
 use File::Path;
 use File::Copy;
