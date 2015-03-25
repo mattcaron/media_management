@@ -73,18 +73,15 @@ my $podcast_log = $source_dir . "/" . $podcast_log_file;
 my $initialize = 0;
 my %uploaded_files;
 
-my $build_playlist_only = 0;
 my $help = 0;
 
 my $options =   GetOptions
     (
-     'build-playlist-only'    => \$build_playlist_only,
      'help|?'        => \$help
      );
 
 my $usage   = qq^
   --help, --?             displays this help
-  --build-playlist-only   don't copy files, just display help.
 ^;
 
 # ' Stupid emacs single quote font coloring
@@ -95,43 +92,36 @@ if($help)
     exit(0);
 }
 
-if(!$build_playlist_only)
+
+# Read in logfile and store file path and name in hash.
+if(-e $podcast_log)
 {
-
-    # Read in logfile and store file path and name in hash.
-    if(-e $podcast_log)
+    open(LOGFILE, $podcast_log);
+    
+    while(<LOGFILE>)
     {
-        open(LOGFILE, $podcast_log);
-
-        while(<LOGFILE>)
-        {
-            chomp($_);
-            $uploaded_files{$_} = 1;
-        }
-
-        close(LOGFILE);
+        chomp($_);
+        $uploaded_files{$_} = 1;
     }
-    else
-    {
-        # logfile doesn't exist - assume initialization mode
-        $initialize = 1;
+    
+    close(LOGFILE);
+}
+else
+{
+    # logfile doesn't exist - assume initialization mode
+    $initialize = 1;
+    
+    print "Initializing logfile...\n";
+}
 
-        print "Initializing logfile...\n";
-    }
-
-    # Recurse through directory and find each file there and do copy,
-    # but sort them alphabetically.
-    find(
-       {
-        'wanted' => \&copy_stuff,
-        'preprocess' => sub { sort { $a cmp $b } @_ }
-       },
-         ($source_dir));
-
-} # end !$build_playlist_only
-
-# Recurse through and build playlists for each directory
-find(\&build_playlists,  ($target_dir));
+# Recurse through directory and find each file there and do copy,
+# but sort them alphabetically.
+find(
+   {
+    'wanted' => \&copy_stuff,
+    'preprocess' => sub { sort { $a cmp $b } @_ }
+   },
+     ($source_dir));
 
 my @skipped; # Bad global, no cookie.
 
