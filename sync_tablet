@@ -8,7 +8,7 @@ rsync -aLh --inplace --delete $HOME/gaming/boardgames/ "$BASEDIR/boardgames"
 echo ccgs
 rsync -aLh --inplace --delete $HOME/gaming/ccgs/ "$BASEDIR/ccgs"
 echo cards
-rsync -aLh --inplace --delete $HOME/gaming/ccgs/ "$BASEDIR/cards"
+rsync -aLh --inplace --delete $HOME/gaming/cards/ "$BASEDIR/cards"
 echo dice
 rsync -aLh --inplace --delete $HOME/gaming/dice/ "$BASEDIR/dice"
 echo literature
