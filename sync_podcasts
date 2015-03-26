@@ -64,6 +64,11 @@ my $auto_playlist_file = "00_playlist.m3u";
 # file which causes us to skip a directory
 my $nopushfile = ".nopush";
 
+# Limit of how much data we should push, in bytes.
+# This is a "soft" limit - we stop when we go over it.
+# This is 4GB.
+my $max_data = 4294967296;
+
 ## End Constants
 
 ## Derived constants
@@ -74,6 +79,8 @@ my $initialize = 0;
 my %uploaded_files;
 
 my $help = 0;
+
+my $data_left = $max_data;
 
 my $options =   GetOptions
     (
@@ -91,7 +98,6 @@ if($help)
     print $usage;
     exit(0);
 }
-
 
 # Read in logfile and store file path and name in hash.
 if(-e $podcast_log)
@@ -114,14 +120,27 @@ else
     print "Initializing logfile...\n";
 }
 
-# Recurse through directory and find each file there and do copy,
-# but sort them alphabetically.
-find(
-   {
-    'wanted' => \&copy_stuff,
-    'preprocess' => sub { sort { $a cmp $b } @_ }
-   },
-     ($source_dir));
+my $current_data = `du -bs ${target_dir}`;
+$current_data =~ s/\s+\D+$//;
+
+$data_left -= $current_data;
+
+# only start copying data if we have free space
+if ($data_left <= 0) {
+    print "\n\nNo room left on device, not copying anything.\n";
+}
+else {
+    # Recurse through directory and find each file there and do copy,
+    # but sort them alphabetically. This will die if it
+    # cannot complete for whatever reason, so it should be the
+    # last thing we do.
+    find(
+       {
+        'wanted' => \&copy_stuff,
+        'preprocess' => sub { sort { $a cmp $b } @_ }
+       },
+         ($source_dir));
+}
 
 my @skipped; # Bad global, no cookie.
 
@@ -169,7 +188,6 @@ sub copy_stuff($@)
             {
                 if(!$initialize)
                 {
-
                     # Put file on the music device, maintaining directory
                     # structure..
                     # make directory if it doesn't exist
@@ -188,15 +206,23 @@ sub copy_stuff($@)
                        die "Cannot copy ${fullpath} to " .
                        "${destination_path_file}: $!";
 
+                    # Log that you did it
+                    open(LOGFILE, ">>", $podcast_log);
+                    
+                    print(LOGFILE "${fullpath}\n");
+                    
+                    close(LOGFILE);
+
+                    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size,
+                        $atime, $mtime, $ctime, $blksize, $blocks)
+                      = stat($fullpath);
+                    $data_left -= $size;
+
+                    if ($data_left <= 0) {
+                        print "\n\nData reached ${max_data}, exiting.\n";
+                        exit 0;
+                    }
                 }
-
-                # Log that you did it
-                open(LOGFILE, ">>", $podcast_log);
-
-                print(LOGFILE "${fullpath}\n");
-
-                close(LOGFILE);
-
             }
         } # else, ignore directory
     } # else we're told to skip the directory
