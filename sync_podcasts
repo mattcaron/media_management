@@ -75,7 +75,6 @@ my $max_data = 4294967296;
 my $podcast_log = $source_dir . "/" . $podcast_log_file;
 
 ## Plain old variables
-my $initialize = 0;
 my %uploaded_files;
 
 my $help = 0;
@@ -111,13 +110,6 @@ if(-e $podcast_log)
     }
     
     close(LOGFILE);
-}
-else
-{
-    # logfile doesn't exist - assume initialization mode
-    $initialize = 1;
-    
-    print "Initializing logfile...\n";
 }
 
 my $current_data = `du -bs ${target_dir}`;
@@ -186,42 +178,39 @@ sub copy_stuff($@)
             # make sure this hasn't been uploaded...
             if(!defined $uploaded_files{$fullpath})
             {
-                if(!$initialize)
+                # Put file on the music device, maintaining directory
+                # structure..
+                # make directory if it doesn't exist
+                if(!-d $destination_path)
                 {
-                    # Put file on the music device, maintaining directory
-                    # structure..
-                    # make directory if it doesn't exist
-                    if(!-d $destination_path)
-                    {
-                        print "\n\nMaking directory ${destination_path}...\n\n";
-
-                        mkpath($destination_path) ||
+                    print "\n\nMaking directory ${destination_path}...\n\n";
+                    
+                    mkpath($destination_path) ||
                             die "Cannot mkpath ${destination_path}: $!";
-                    }
+                }
+                
+                print "$fullpath => ${destination_path_file}\n";
+                
+                # copy file to that directory
+                copy($fullpath, $destination_path_file) ||
+                  die "Cannot copy ${fullpath} to " .
+                    "${destination_path_file}: $!";
 
-                    print "$fullpath => ${destination_path_file}\n";
-
-                    # copy file to that directory
-                    copy($fullpath, $destination_path_file) ||
-                       die "Cannot copy ${fullpath} to " .
-                       "${destination_path_file}: $!";
-
-                    # Log that you did it
-                    open(LOGFILE, ">>", $podcast_log);
-                    
-                    print(LOGFILE "${fullpath}\n");
-                    
-                    close(LOGFILE);
-
-                    my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size,
-                        $atime, $mtime, $ctime, $blksize, $blocks)
-                      = stat($fullpath);
-                    $data_left -= $size;
-
-                    if ($data_left <= 0) {
-                        print "\n\nData reached ${max_data}, exiting.\n";
-                        exit 0;
-                    }
+                # Log that you did it
+                open(LOGFILE, ">>", $podcast_log);
+                
+                print(LOGFILE "${fullpath}\n");
+                
+                close(LOGFILE);
+                
+                my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size,
+                    $atime, $mtime, $ctime, $blksize, $blocks)
+                  = stat($fullpath);
+                $data_left -= $size;
+                
+                if ($data_left <= 0) {
+                    print "\n\nData reached ${max_data}, exiting.\n";
+                    exit 0;
                 }
             }
         } # else, ignore directory
