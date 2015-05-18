@@ -2,13 +2,6 @@
 
 BASEDIR=/media/matt/phone
 
-if [ -d $HOME/pub/music ]; then
-   echo music	   
-   rsync -aLh --inplace --delete $HOME/pub/music/ $BASEDIR/Music
-else
-   echo skipping music, not mounted
-fi
-
 cp -a ~/.keepassx/* $BASEDIR/keepassx/.
 cp -a ~/.ssh/id_dsa $BASEDIR/ssh/.
 echo pulling backups

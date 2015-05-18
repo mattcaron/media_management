@@ -1,0 +1,6 @@
+#!/bin/bash
+
+BASEDIR=/media/matt/phone
+
+echo music	   
+rsync -aLh --inplace --delete $HOME/pub/music/ $BASEDIR/Music
