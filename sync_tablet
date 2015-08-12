@@ -29,4 +29,8 @@ cp -a ~/.keepassx/* "$BASEDIR/keepassx/."
 cp -a ~/.ssh/id_dsa "$BASEDIR/ssh/."
 echo pulling backups
 rsync -aLh --inplace --delete "$BASEDIR/backups/" $HOME/workspace/backups/tablet
+echo pulling pics
+rsync -aLh --inplace $BASEDIR/DCIM/Camera/ $HOME/workspace/pics/photos/new
+echo moving pics to gallery
+mv $BASEDIR/DCIM/Camera/* $BASEDIR/pics/.
 echo done
