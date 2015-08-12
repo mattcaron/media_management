@@ -30,7 +30,7 @@ if (scalar(@ARGV) > 0) {
         die "Unknown host";
     }
 
-    `wodim -vvv driveropts=burnfree dev=${drive} -dao -eject ${args}`
+    `wodim -vvv -dao -eject dev=${drive} ${args}`
 }
 else {
     print <<EOF
