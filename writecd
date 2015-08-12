@@ -13,16 +13,21 @@ if (scalar(@ARGV) > 0) {
     my $drive;
     my $args = join(" ", @ARGV);
     
-    if ($0 =~ /dvd/) {
-        $drive = "/dev/dvdrw";
-    }
-    else {
-        $drive = "/dev/cdrw";
-    }
     # fixup for case's multiple drive layout - use the newer, 
     # better drive for burns, which is drive "1";
     if (hostname() eq "case") {
-        $drive .= "1";
+        if ($0 =~ /dvd/) {
+            $drive = "/dev/dvdrw1";
+        }
+        else {
+            $drive = "/dev/cdrw1";
+        }
+    }
+    elsif (hostname() eq "hiro") {
+        $drive = "/dev/sr1";
+    }
+    else {
+        die "Unknown host";
     }
 
     `wodim -vvv driveropts=burnfree dev=${drive} -dao -eject ${args}`
