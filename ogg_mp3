@@ -1,0 +1,35 @@
+#!/usr/bin/perl -w
+
+use strict;
+use diagnostics;
+use File::Basename;
+
+my @args=@ARGV;
+my $numargs=$#ARGV;
+my $curarg=0;
+my $filename;
+
+print "Converting...\n";
+
+while ($curarg <= $numargs){
+    $filename = $args[$curarg];
+    my ($name, $path, $suffix) = fileparse($filename, ".ogg");
+    if ($suffix eq ".ogg") {
+        my $nameWithPath = "${path}${name}";
+        print "${nameWithPath}\n";
+        system("ffmpeg -i \"${nameWithPath}.ogg\" \"${nameWithPath}.mp3\""); 
+    }
+    ++$curarg;
+}
+
+
+
+
+
+
+
+
+
+
+
+
