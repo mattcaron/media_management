@@ -17,7 +17,7 @@ while ($curarg <= $numargs){
     if ($suffix eq ".ogg") {
         my $nameWithPath = "${path}${name}";
         print "${nameWithPath}\n";
-        system("ffmpeg -i \"${nameWithPath}.ogg\" \"${nameWithPath}.mp3\""); 
+        system("avconv -i \"${nameWithPath}.ogg\" \"${nameWithPath}.mp3\"");
     }
     ++$curarg;
 }
