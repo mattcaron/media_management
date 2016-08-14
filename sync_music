@@ -1,6 +1,18 @@
 #!/bin/bash
 
-BASEDIR=/media/matt/phone
+usage() {
+    echo "$0 - sync music to target"
+    echo "Usage: $0 target directory"
+}
 
-echo music	   
-rsync -aLh --inplace --delete $HOME/pub/music/ $BASEDIR/Music
+if [ $# -lt 1 ]; then
+    usage
+    exit
+fi
+
+if [[ $1 == "--help" ]]; then
+    usage
+    exit
+fi
+
+rsync -aLh --inplace --delete $HOME/pub/music/ $1
