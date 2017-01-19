@@ -4,12 +4,17 @@ BASEDIR=/media/matt/phone
 
 cp -a ~/.keepassx/* $BASEDIR/keepassx/.
 cp -a ~/.ssh/id_dsa $BASEDIR/ssh/.
-echo pulling backups
-rsync -aLh --inplace --delete $BASEDIR/carbon/ $HOME/workspace/backups/phone/carbon
-echo done
 echo pulling pics
 rsync -aLh --inplace $BASEDIR/DCIM/Camera/ $HOME/workspace/pics/photos/new
 echo moving pics to gallery
 mv $BASEDIR/DCIM/Camera/* $BASEDIR/pics/.
 echo done
+
+echo Is it time to run a backup with Helium?
+echo If so, do it, copy the backup to the SD card and run:
+echo rm -r $HOME/workspace/backups/phone/carbon
+echo mv $BASEDIR/carbon/ $HOME/workspace/backups/phone/
+echo Bye!
+
+
 
