@@ -3,7 +3,7 @@
 BASEDIR=/media/matt/phone
 
 cp -a ~/.keepassx/* $BASEDIR/keepassx/.
-cp -a ~/.ssh/id_dsa $BASEDIR/ssh/.
+cp -a ~/.ssh/id_* $BASEDIR/ssh/.
 echo pulling pics
 rsync -aLh --inplace $BASEDIR/DCIM/Camera/ $HOME/workspace/pics/photos/new
 echo moving pics to gallery
