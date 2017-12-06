@@ -15,4 +15,4 @@ if [[ $1 == "--help" ]]; then
     exit
 fi
 
-rsync -aLh --inplace --delete $HOME/pub/music/ $1
+rsync -aLh --inplace --delete $HOME/music/ $1
