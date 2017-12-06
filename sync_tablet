@@ -3,6 +3,19 @@
 # Default assumes SD card 
 BASEDIR=/media/$USER/SD
 
+echo keepass....
+cp -a ~/.keepassx/* "$BASEDIR/keepassx/."
+cp -a ~/.ssh/id_* "$BASEDIR/ssh/."
+echo pulling backups
+rsync -aLh --inplace --delete "$BASEDIR/backups/" $HOME/workspace/backups/tablet
+echo pulling pics
+rsync -aLh --inplace $BASEDIR/DCIM/Camera/ $HOME/workspace/pics/photos/new
+echo moving pics to gallery
+mv $BASEDIR/DCIM/Camera/* $BASEDIR/pics/.
+echo rpgs
+rsync -aLh --inplace --delete $HOME/gaming/rpgs/ "$BASEDIR/rpgs"
+echo reading
+rsync -aLh --inplace --delete $HOME/reading/ "$BASEDIR/reading"
 echo boardgames
 rsync -aLh --inplace --delete $HOME/gaming/boardgames/ "$BASEDIR/boardgames"
 echo ccgs
@@ -21,16 +34,4 @@ echo minis
 rsync -aLh --inplace --delete $HOME/gaming/minis/ "$BASEDIR/minis"
 echo molds
 rsync -aLh --inplace --delete $HOME/gaming/molds/ "$BASEDIR/molds"
-echo rpgs
-rsync -aLh --inplace --delete $HOME/gaming/rpgs/ "$BASEDIR/rpgs"
-echo reading
-rsync -aLh --inplace --delete $HOME/reading/ "$BASEDIR/reading"
-cp -a ~/.keepassx/* "$BASEDIR/keepassx/."
-cp -a ~/.ssh/id_* "$BASEDIR/ssh/."
-echo pulling backups
-rsync -aLh --inplace --delete "$BASEDIR/backups/" $HOME/workspace/backups/tablet
-echo pulling pics
-rsync -aLh --inplace $BASEDIR/DCIM/Camera/ $HOME/workspace/pics/photos/new
-echo moving pics to gallery
-mv $BASEDIR/DCIM/Camera/* $BASEDIR/pics/.
 echo done
