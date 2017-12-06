@@ -11,9 +11,7 @@ mv $BASEDIR/DCIM/Camera/* $BASEDIR/pics/.
 echo done
 
 echo Is it time to run a backup with Helium?
-echo If so, do it, copy the backup to the SD card and run:
-echo rm -r $HOME/workspace/backups/phone/carbon
-echo mv $BASEDIR/carbon/ $HOME/workspace/backups/phone/
+echo If so, do it, then plug it in to the computer and copy it off.
 echo Bye!
 
 
