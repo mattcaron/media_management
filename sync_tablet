@@ -1,10 +1,12 @@
 #!/bin/bash
 
 # Default assumes SD card 
-BASEDIR=/media/$USER/SD
+BASEDIR=/media/$USER/TABLET
 
 echo keepass....
+mkdir -p "$BASEDIR/keepassx"
 cp -a ~/.keepassx/* "$BASEDIR/keepassx/."
+mkdir -p "$BASEDIR/ssh"
 cp -a ~/.ssh/id_* "$BASEDIR/ssh/."
 echo pulling backups
 rsync -aLh --inplace --delete "$BASEDIR/backups/" $HOME/workspace/backups/tablet
