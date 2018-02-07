@@ -2,6 +2,9 @@
 
 BASEDIR=/media/matt/phone
 
+echo pulling backups
+rsync -aLh --inplace --delete "$BASEDIR/backups/" $HOME/workspace/backups/phone
+
 cp -a ~/.keepassx/* $BASEDIR/keepassx/.
 cp -a ~/.ssh/id_* $BASEDIR/ssh/.
 echo pulling pics
