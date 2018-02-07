@@ -32,7 +32,7 @@ use Data::Dumper;
 
 ## Constants
 
-my $PLAYLIST_PREFIX = "00_";
+my $PLAYLIST_PREFIX = "";
 my $PLAYLIST_SUFFIX = ".m3u";
 
 # Filter to be passed to the shell's find in order to find files
