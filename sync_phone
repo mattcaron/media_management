@@ -13,9 +13,3 @@ echo moving pics to gallery
 mv $BASEDIR/DCIM/Camera/* $BASEDIR/pics/.
 echo done
 
-echo Is it time to run a backup with Helium?
-echo If so, do it, then plug it in to the computer and copy it off.
-echo Bye!
-
-
-
