@@ -16,8 +16,9 @@ echo moving pics to gallery
 mv $BASEDIR/DCIM/Camera/* $BASEDIR/pics/.
 echo rpgs
 rsync -aLh --inplace --delete $HOME/gaming/rpgs/ "$BASEDIR/rpgs"
-echo reading
-rsync -aLh --inplace --delete $HOME/reading/ "$BASEDIR/reading"
+# Not always mounted
+# echo reading
+# rsync -aLh --inplace --delete $HOME/pub/reading/ "$BASEDIR/reading"
 echo boardgames
 rsync -aLh --inplace --delete $HOME/gaming/boardgames/ "$BASEDIR/boardgames"
 echo ccgs
