@@ -54,13 +54,6 @@ my $podcast_log_file = "sync_podcasts.log";
 # target directory to which podcasts are to be copied
 my $target_dir = "/media/matt/phone/podcasts";
 
-# portion of above representing the device's location on your machine.
-# this is removed from playlists so that the relative path is correct
-my $playlist_base_remove = "/media/matt/phone";
-
-# name of the automagically generated playlist file
-my $auto_playlist_file = "00_playlist.m3u";
-
 # file which causes us to skip a directory
 my $nopushfile = ".nopush";
 
@@ -217,41 +210,6 @@ sub copy_stuff($@)
             }
         } # else, ignore directory
     } # else we're told to skip the directory
-}
-
-sub build_playlists
-{
-    my $fullpath = $File::Find::name;
-
-    # only operate on directories and they must be below the main one
-    if(-d $fullpath && $fullpath ne $target_dir)
-    {
-        print "Building playlist for ${fullpath}\n";
-
-        my $target_playlist_file = $fullpath . "/" . $auto_playlist_file;
-
-        # shell out call to create playlist
-        # cd (dir) - \ls "`pwd`"/* > 00_playlist.m3u
-        open (LS, "/bin/ls \"$fullpath\"/*|") ||
-            die "Can't get directory listing for ${fullpath}: $!\n";
-        open (PLAYLIST, ">", "${fullpath}/${auto_playlist_file}") ||
-            die "Can't open ${fullpath}/${auto_playlist_file}: $!\n";
-
-        while(<LS>)
-        {
-            my $path = $_;
-
-            # make sure it's not us
-            if($path !~ /$auto_playlist_file/)
-            {
-                chomp($path);
-                $path =~ s/^$playlist_base_remove//;
-                print PLAYLIST $path . "\n";
-            }
-        }
-        close LS;
-        close PLAYLIST;
-    }
 }
 
 
