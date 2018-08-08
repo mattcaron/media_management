@@ -52,11 +52,11 @@ my $source_dir = $ENV{"HOME"} . "/pub/podcasts";
 my $podcast_log_file = "sync_podcasts.log";
 
 # target directory to which podcasts are to be copied
-my $target_dir = "/media/matt/podcast_usb/podcasts";
+my $target_dir = "/media/matt/phone/podcasts";
 
 # portion of above representing the device's location on your machine.
 # this is removed from playlists so that the relative path is correct
-my $playlist_base_remove = "/media/matt/podcast_usb";
+my $playlist_base_remove = "/media/matt/phone";
 
 # name of the automagically generated playlist file
 my $auto_playlist_file = "00_playlist.m3u";
@@ -68,9 +68,8 @@ my $nopushfile = ".nopush";
 # This is a "soft" limit - we stop when we go over it.
 # This is 4GB.
 # my $max_data = 4294967296;
-# This is 3749MB, which is 256MB shy of the limit, so we don't consume
-# all of the space on the drive.
-my $max_data = 3730812928;
+# This is 8GB
+my $max_data = 8589934592;
 
 ## End Constants
 
