@@ -9,32 +9,32 @@ cp -a ~/.keepassx/* "$BASEDIR/keepassx/."
 mkdir -p "$BASEDIR/ssh"
 cp -a ~/.ssh/id_* "$BASEDIR/ssh/."
 echo pulling backups
-rsync -aLh --inplace --delete "$BASEDIR/backups/" $HOME/workspace/backups/tablet
+rsync -aLh --inplace --delete "$BASEDIR/backups/" "$HOME/workspace/backups/tablet"
 echo pulling pics
-rsync -aLh --inplace $BASEDIR/DCIM/Camera/ $HOME/workspace/pics/photos/new
+rsync -aLh --inplace "$BASEDIR/DCIM/Camera/" "$HOME/workspace/pics/photos/new"
 echo moving pics to gallery
-mv $BASEDIR/DCIM/Camera/* $BASEDIR/pics/.
+mv "$BASEDIR/DCIM/Camera/*" "$BASEDIR/pics/."
 echo rpgs
-rsync -aLh --inplace --delete $HOME/gaming/rpgs/ "$BASEDIR/rpgs"
+rsync -aLh --inplace --delete "$HOME/gaming/rpgs/" "$BASEDIR/rpgs"
 # Not always mounted
 # echo reading
-# rsync -aLh --inplace --delete $HOME/pub/reading/ "$BASEDIR/reading"
+# rsync -aLh --inplace --delete "$HOME/pub/reading/" "$BASEDIR/reading"
 echo boardgames
-rsync -aLh --inplace --delete $HOME/gaming/boardgames/ "$BASEDIR/boardgames"
+rsync -aLh --inplace --delete "$HOME/gaming/boardgames/" "$BASEDIR/boardgames"
 echo ccgs
-rsync -aLh --inplace --delete $HOME/gaming/ccgs/ "$BASEDIR/ccgs"
+rsync -aLh --inplace --delete "$HOME/gaming/ccgs/" "$BASEDIR/ccgs"
 echo cards
-rsync -aLh --inplace --delete $HOME/gaming/cards/ "$BASEDIR/cards"
+rsync -aLh --inplace --delete "$HOME/gaming/cards/" "$BASEDIR/cards"
 echo dice
-rsync -aLh --inplace --delete $HOME/gaming/dice/ "$BASEDIR/dice"
+rsync -aLh --inplace --delete "$HOME/gaming/dice/" "$BASEDIR/dice"
 echo literature
-rsync -aLh --inplace --delete $HOME/gaming/literature/ "$BASEDIR/literature"
+rsync -aLh --inplace --delete "$HOME/gaming/literature/" "$BASEDIR/literature"
 echo maps
-rsync -aLh --inplace --delete $HOME/gaming/maps/ "$BASEDIR/maps"
+rsync -aLh --inplace --delete "$HOME/gaming/maps/" "$BASEDIR/maps"
 echo mine
-rsync -aLh --inplace --delete $HOME/gaming/mine/ "$BASEDIR/mine"
+rsync -aLh --inplace --delete "$HOME/gaming/mine/" "$BASEDIR/mine"
 echo minis
-rsync -aLh --inplace --delete $HOME/gaming/minis/ "$BASEDIR/minis"
+rsync -aLh --inplace --delete "$HOME/gaming/minis/" "$BASEDIR/minis"
 echo molds
-rsync -aLh --inplace --delete $HOME/gaming/molds/ "$BASEDIR/molds"
+rsync -aLh --inplace --delete "$HOME/gaming/molds/" "$BASEDIR/molds"
 echo done
