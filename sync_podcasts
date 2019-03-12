@@ -52,7 +52,7 @@ my $source_dir = $ENV{"HOME"} . "/pub/podcasts";
 my $podcast_log_file = "sync_podcasts.log";
 
 # target directory to which podcasts are to be copied
-my $target_dir = "/media/matt/phone/podcasts";
+my $target_dir = "/media/matt/PHONE/podcasts";
 
 # file which causes us to skip a directory
 my $nopushfile = ".nopush";

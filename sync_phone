@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASEDIR=/media/matt/phone
+BASEDIR=/media/matt/PHONE
 
 echo pulling backups
 rsync -aLh --inplace --delete "$BASEDIR/backups/" "$HOME/workspace/backups/phone"
