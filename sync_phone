@@ -2,9 +2,6 @@
 
 BASEDIR=/media/matt/PHONE
 
-echo pulling backups
-rsync -aLh --inplace --delete "$BASEDIR/backups/" "$HOME/workspace/backups/phone"
-
 cp -a ~/.keepassx/* $BASEDIR/keepassx/.
 cp -a ~/.ssh/id_* $BASEDIR/ssh/.
 echo pulling pics
@@ -13,8 +10,8 @@ echo moving pics to gallery
 mv "$BASEDIR/DCIM/Camera/*" "$BASEDIR/pics/."
 echo done
 
-echo Is it time to run a backup with Helium?
-echo If so, do it, then plug it in to the computer and copy it off.
+echo Is it time to run a backup with adb?
+echo If so, do it, then plug it in to the computer and run backup_phone.
 echo Bye!
 
 
