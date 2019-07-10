@@ -63,6 +63,8 @@ my $nopushfile = ".nopush";
 # my $max_data = 4294967296;
 # This is 8GB
 my $max_data = 8589934592;
+# This is 16GB
+# my $max_data = 17179869184;
 
 ## End Constants
 
