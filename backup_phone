@@ -1,7 +1,5 @@
 #!/bin/bash
 
-BASEDIR=/media/matt/PHONE
-
 echo pulling backups
 
 adb backup -f $HOME/workspace/backups/phone/backup-`date +%Y-%m-%d-%H%M`.ab -all -apk -system
