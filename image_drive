@@ -1,0 +1,6 @@
+#!/bin/bash -e
+
+ddrescue --sparse $1 $2
+echo Compressing...
+# -vv gives progress indicator
+lzip -vv $2
