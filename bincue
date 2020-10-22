@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DEVICE=/dev/cdrom
+DEVICE=/dev/dvdrw
 # the the number of args > 0 and isn't then pass them to the command
 # else print the idiot message
 
