@@ -1,0 +1,5 @@
+#!/bin/bash
+
+echo pulling backups
+
+adb backup -f $HOME/workspace/backups/tablet/backup-`date +%Y-%m-%d-%H%M`.ab -all -apk -system
