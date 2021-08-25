@@ -19,6 +19,12 @@ rsync -aLh --inplace --delete "$HOME/gaming/rpgs/" "$BASEDIR/rpgs"
 # rsync -aLh --inplace --delete "$HOME/pub/reading/" "$BASEDIR/reading"
 echo blaster_magazine
 rsync -aLh --inplace --delete "$HOME/gaming/blaster_magazine/" "$BASEDIR/blaster_magazine"
+echo bexims_bazar
+rsync -aLh --inplace --delete "$HOME/gaming/bexims_bazar/" "$BASEDIR/bexims_bazar"
+echo terrain_essentials
+rsync -aLh --inplace --delete "$HOME/gaming/terrain_essentials/" "$BASEDIR/terrain_essentials"
+echo armies_legions_and_hordes
+rsync -aLh --inplace --delete "$HOME/gaming/armies_legions_and_hordes/" "$BASEDIR/armies_legions_and_hordes"
 echo boardgames
 rsync -aLh --inplace --delete "$HOME/gaming/boardgames/" "$BASEDIR/boardgames"
 echo ccgs
