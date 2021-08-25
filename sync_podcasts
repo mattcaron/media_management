@@ -46,7 +46,7 @@ $File::Find::dont_use_nlink = 1;
 
 ## Constants
 # Directory from which podcasts are to be copied
-my $source_dir = $ENV{"HOME"} . "/pub/podcasts";
+my $source_dir = $ENV{"HOME"} . "/jarvis/pub/podcasts";
 
 # Log file containing list of copied podcasts
 my $podcast_log_file = "sync_podcasts.log";

@@ -16,7 +16,7 @@ echo rpgs
 rsync -aLh --inplace --delete "$HOME/gaming/rpgs/" "$BASEDIR/rpgs"
 # Not always mounted
 # echo reading
-# rsync -aLh --inplace --delete "$HOME/pub/reading/" "$BASEDIR/reading"
+# rsync -aLh --inplace --delete "$HOME/jarvis/pub/reading/" "$BASEDIR/reading"
 echo blaster_magazine
 rsync -aLh --inplace --delete "$HOME/gaming/blaster_magazine/" "$BASEDIR/blaster_magazine"
 echo bexims_bazar
