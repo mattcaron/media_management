@@ -36,10 +36,18 @@ my $PLAYLIST_PREFIX = "";
 my $PLAYLIST_SUFFIX = ".m3u";
 
 # Filter to be passed to the shell's find in order to find files
-my $FIND_FILTER = "-type f -name '*.mp3' -or -name '*.ogg' -or -name '*.wav'";
+my $FIND_FILTER = "-type f -name '*.mp3' -or -name '*.ogg' -or -name '*.wav' -or -name '*.opus'";
 # (We're not going to test that you have this, because everyone does.
 my $FIND = `which find`;
 chomp($FIND);
+
+my $opusinfo = `which opusinfo`;
+chomp($opusinfo);
+if (!defined($opusinfo) || length($opusinfo) == 0) {
+    printf("Warning - opusinfo not found, EXTINF entries " . 
+           "for opus files won't be possible\n\n");
+    $opusinfo = undef;
+}
 
 my $ogginfo = `which ogginfo`;
 chomp($ogginfo);
@@ -119,6 +127,43 @@ sub calculatRuntimeSeconds($)
     return $minutes + $seconds;
 }
 
+##
+# Get the EXTINF line for an opus file
+#
+# @param file File for which we should get info
+#
+# @return EXTINF line suitable for printing to file (including
+# trailing newline)
+#
+sub getOpusEXTINFLine($)
+{
+    my ($file) = @_;
+    my $extinf = "";
+
+    if (!defined(open(INFO, "-|", "${opusinfo} \"${file}\""))) {
+        print("Warning - unable to get info for ${file}: $!\n");
+    }
+    else {
+        my $runtime = "";
+        my $artist = "";
+        my $title = "";
+        while (my $line = <INFO>) {
+            chomp($line);
+            if ($line =~ /^\s+TITLE=(.*)$/) {
+                $title = $1;
+            }
+            elsif ($line =~ /^\s+ARTIST=(.*)$/) {
+                $artist = $1;
+            }
+            elsif ($line =~ /Playback length:(.*)$/) {
+                $runtime = calculatRuntimeSeconds($1);
+            }
+        }
+        $extinf = "#EXTINF:${runtime},${artist} - ${title}\n";
+    }
+
+    return $extinf;
+}
 
 ##
 # Get the EXTINF line for an ogg file
@@ -235,7 +280,12 @@ sub add($$$$)
                     chomp($line);
 
                     if ($extinf) {
-                        if ($line =~ /.ogg$/i) {
+                        if ($line =~ /.opus$/i) {
+                            if (defined($opusinfo)) {
+                                print(PLAYLIST getOpusEXTINFLine($line));
+                            }
+                        }
+                        elsif ($line =~ /.ogg$/i) {
                             if (defined($ogginfo)) {
                                 print(PLAYLIST getOggEXTINFLine($line));
                             }
