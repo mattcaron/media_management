@@ -13,7 +13,7 @@ rsync -aLh --inplace "$BASEDIR/DCIM/Camera/" "$HOME/workspace/pics/photos/new"
 echo moving pics to gallery
 mv "$BASEDIR/DCIM/Camera/*" "$BASEDIR/pics/."
 echo rpgs
-rsync -aLh --inplace --delete "$HOME/gaming/rpgs/" "$BASEDIR/rpgs"
+rsync -aLh --inplace --exclude "*.iso" --delete "$HOME/gaming/rpgs/" "$BASEDIR/rpgs"
 # Not always mounted
 # echo reading
 # rsync -aLh --inplace --delete "$HOME/jarvis/pub/reading/" "$BASEDIR/reading"
