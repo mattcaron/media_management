@@ -8,6 +8,9 @@ cp -a ~/.keepassx/* $BASEDIR/keepassx/.
 cp -a ~/.ssh/id_* $BASEDIR/ssh/.
 echo pulling pics
 rsync -aLh --inplace "$PICS" "$HOME/workspace/pics/photos/new"
+echo pushing music
+rsync -aLh --inplace --delete "$HOME/music/" "$BASEDIR/Music"
+
 echo moving pics to gallery
 mv "$PICS"/* "$BASEDIR/pics/."
 echo done
