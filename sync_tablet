@@ -43,6 +43,6 @@ echo molds
 rsync -aLh --inplace --delete "$HOME/gaming/molds/" "$BASEDIR/molds"
 echo done
 
-echo Is it time to run a backup with adb?
+echo Is it time to run a backup with OpenAndroidBackup?
 echo If so, do it, then plug it in to the computer and run backup_tablet.
 echo Bye!

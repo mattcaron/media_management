@@ -2,4 +2,31 @@
 
 echo pulling backups
 
-adb backup -f $HOME/workspace/backups/phone/backup-`date +%Y-%m-%d-%H%M`.ab -all -apk -system
+# Deprecated in android 12+. Switched to https://www.openandroidbackup.me/
+# adb backup -f $HOME/workspace/backups/tablet/backup-`date +%Y-%m-%d-%H%M`.ab -all -apk -system
+
+set -ae
+selected_action="Backup"
+
+archive_password=`cat /home/matt/workspace/backups/backup_password`
+mode="Wired"
+export_method="tar"
+use_hooks="no"
+data_erase_choice="Fast"
+discouraged_disable_archive="no"
+compression_level="5"
+
+if [ "`basename $0`" = "backup_phone" ]; then
+    archive_path="/home/matt/workspace/backups/phone/`date +%F-%H_%M`"
+elif [ "`basename $0`" = "backup_tablet" ]; then
+    archive_path="/home/matt/workspace/backups/tablet/`date +%F-%H_%M`"
+else
+    echo "Unknown device, exiting".
+    exit 1
+fi
+
+mkdir -p ${archive_path}
+
+echo Backing up to "${archive_path}" with password "${archive_password}".
+
+/home/matt/workspace/backups/open_android_backup/backup.sh
